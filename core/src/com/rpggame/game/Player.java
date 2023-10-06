@@ -68,7 +68,7 @@ public class Player {
 
     public Player() {
         isMoving = false;
-        Texture characterSheet = new Texture("barbarian.png");
+        Texture characterSheet = new Texture("Lizard.png");
         int rows = 4;
         int columns = 9;
         TiledMap tiledMap = new TmxMapLoader().load("map.tmx");
@@ -89,7 +89,7 @@ public class Player {
 
         position = new Vector2(300, 150);
         bounds = new Rectangle(position.x, position.y, 32, 32);
-        currentCharacterFrame = characterFrames[0][3];
+        currentCharacterFrame = characterFrames[0][2];
 
         movement = new PlayerMovement(this);
     }

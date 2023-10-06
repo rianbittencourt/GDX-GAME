@@ -1,5 +1,6 @@
 package com.rpggame.game;
 
+import com.badlogic.gdx.Application;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -9,7 +10,6 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.Application;
 
 public class MyGdxGame extends ApplicationAdapter {
     private OrthographicCamera camera;
@@ -18,13 +18,11 @@ public class MyGdxGame extends ApplicationAdapter {
     private SpriteBatch batch;
     private Player player;
     private InputHandler inputHandler;
-    private TouchPad touchpad;
-    int fps;
-    BitmapFont font;
-    SpriteBatch spriteBatch;
-    
-    
-    
+    private int fps;
+    private BitmapFont font;
+    private SpriteBatch spriteBatch;
+    private CameraManager cameraManager;
+    private Monster monster;
     
     
 
@@ -33,10 +31,7 @@ public class MyGdxGame extends ApplicationAdapter {
         float w = Gdx.graphics.getWidth();
         float h = Gdx.graphics.getHeight();
         float zoom;
-        
-        
 
-        
         if (Gdx.app.getType() == Application.ApplicationType.Desktop) {
             zoom = 0.4f;
         } else {
@@ -45,51 +40,63 @@ public class MyGdxGame extends ApplicationAdapter {
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, w, h);
+        camera.zoom = zoom;
 
-		camera.zoom = zoom;
-      
-        map = new TmxMapLoader().load("map.tmx"); // Substitua "meu_mapa.tmx" pelo nome do seu arquivo .tmx.
+        map = new TmxMapLoader().load("map.tmx");
         renderer = new OrthogonalTiledMapRenderer(map);
         font = new BitmapFont();
         batch = new SpriteBatch();
         player = new Player();
         spriteBatch = new SpriteBatch();
-       
+        monster = new Monster();
+
+        spriteBatch = new SpriteBatch();
         inputHandler = new InputHandler(player);
+
+        // Inicialize o CameraManager
+        cameraManager = new CameraManager(camera, player);
     }
 
     @Override
     public void render() {
-   
     	 float delta = Gdx.graphics.getDeltaTime();
-    	 fps = Gdx.graphics.getFramesPerSecond();
+    	    fps = Gdx.graphics.getFramesPerSecond();
     	    inputHandler.handleInput();
-    	    
-    	    Gdx.gl.glClearColor(0, 0, 0, 1);
-    	    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-    	    // Ajuste a posição da câmera para seguir o jogador.
-    	    camera.position.set(player.getPosition().x + player.getTileSize() / 2,
-    	                       player.getPosition().y + player.getTileSize() / 2, 0);
-    	    camera.update();
+    	    // Atualize a câmera usando o CameraManager
+    	    cameraManager.update(delta);
+
     	    renderer.setView(camera);
-    	    renderer.render();
+    	    
+    	    // Limpe o buffer de tela apenas uma vez fora do batch
+    	    Gdx.gl.glClearColor(0, 0, 0, 1);
+    	    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT); 
+    	    player.update(delta);
+    	    
+            monster.update(delta, player);
 
-    	    // Inicie o batch antes de desenhar
     	    batch.setProjectionMatrix(camera.combined);
+    	    
     	    batch.begin();
-
-    	    // Desenhe o jogador
+    	    // Renderize o mapa e o jogador
+    	    renderer.render();
     	    player.render(batch);
-
-    	    // Desenhe o texto dentro do batch
-    	    font.draw(batch, "FPS: " + fps,  100, 200);
-
-    	    // Encerre o batch após desenhar
+    	    monster.render(batch);
     	    batch.end();
 
-    	    // Certifique-se de que o método update do jogador seja chamado apenas uma vez por quadro.
-    	    player.update(delta);
+    	    // Renderize o texto fora do batch de mapa
+    	    spriteBatch.begin();
+    	    
+    	    // Defina as coordenadas x e y para o canto superior direito da tela
+    
+
+    	    // Desenhe o texto no canto superior direito
+    	    font.draw(spriteBatch, "FPS: " + fps, 20, 20);
+
+    	    spriteBatch.end();
+
+    	
+    	  
     }
 
     @Override
